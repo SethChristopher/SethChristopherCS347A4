@@ -68,9 +68,9 @@ public class PlayerControl : MonoBehaviour
         anim.SetBool("Jump", false);
         anim.SetBool("Attack", false);
     }
-    void OnCollisionEnter2d(Collision2D col)
+    void OnCollisionEnter2D(Collision2D col)
     {
-        Debug.Log("Spikase Collide");
+        Debug.Log(col.collider.name);
         if (col.gameObject.name == "spikes")
         {
             anim.SetBool("Dead", true);
