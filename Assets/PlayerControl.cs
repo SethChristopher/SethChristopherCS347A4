@@ -4,12 +4,18 @@ using UnityEngine;
 
 public class PlayerControl : MonoBehaviour
 {
-    public float moveSpeed = 1.5f;
-    public float thrust = 75.0f;
+    public float moveSpeed;
+    public float thrust;
+    public Transform firePoint;
+    public GameObject bulletPrefab;
+
 
     private Vector2 moveDir;
     private Animator anim;
     private Rigidbody2D RB;
+    private bool canWalk;
+    private bool canJump;
+
 
     // Start is called before the first frame update
     void Start()
@@ -17,6 +23,8 @@ public class PlayerControl : MonoBehaviour
         moveDir = Vector2.zero;
         anim = GetComponent<Animator>();
         RB = GetComponent<Rigidbody2D>();
+        canWalk = true;
+        canJump = true;
     }
 
     // Update is called once per frame
@@ -24,33 +32,36 @@ public class PlayerControl : MonoBehaviour
     {
 
         Walk();
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && canJump == true)
         {
+      
             Jump();
+            canJump = false;
         }
-        else if (Input.GetMouseButton(0))
+        else if (Input.GetMouseButtonDown(0))
         {
-            anim.SetBool("Attack", true);
-            StartCoroutine(Wait());
+            Shoot();
         }
 
     }
 
     void Walk()
     {
-
-        float moveX = Input.GetAxis("Horizontal");
-        moveDir = new Vector2(moveX, 0);
-        moveDir.Normalize();
-        anim.SetFloat("Speed", Mathf.Abs(moveX));
-
-        // walk
-        transform.position += new Vector3(moveDir.x, moveDir.y, 0.0f) * moveSpeed * Time.deltaTime;
-        if (moveX > 0)
-            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-        else if (moveX < 0)
+        if(canWalk == true)
         {
-            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            float moveX = Input.GetAxis("Horizontal");
+            moveDir = new Vector2(moveX, 0);
+            moveDir.Normalize();
+            anim.SetFloat("Speed", Mathf.Abs(moveX));
+
+            // walk
+            transform.position += new Vector3(moveDir.x, moveDir.y, 0.0f) * moveSpeed * Time.deltaTime;
+            if (moveX > 0)
+                transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            else if (moveX < 0)
+            {
+                transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            }
         }
     }
 
@@ -62,6 +73,13 @@ public class PlayerControl : MonoBehaviour
         
     }
 
+    void Shoot()
+    {
+        anim.SetBool("Attack", true);
+        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        StartCoroutine(Wait());
+    }
+
     IEnumerator Wait()
     {
         yield return new WaitForSeconds(.5f);
@@ -70,10 +88,17 @@ public class PlayerControl : MonoBehaviour
     }
     void OnCollisionEnter2D(Collision2D col)
     {
-        Debug.Log(col.collider.name);
-        if (col.gameObject.name == "spikes")
+        Debug.Log(col.gameObject);
+        //DIE
+        if (col.gameObject.tag == "Spike")
         {
+            canJump = false;
+            canWalk = false;
             anim.SetBool("Dead", true);
+        }
+        else if(col.gameObject.tag == "Ground")
+        {
+            canJump = true;
         }
     }
 
